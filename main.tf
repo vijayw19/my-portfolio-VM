@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "2.46.0"
+      version = "~>3.0"
     }
   }
   cloud {
@@ -16,14 +16,13 @@ terraform {
 
 provider "azurerm" {
   features {}
-
 }
 
 # Getting the resource group from the module
 
 module "amvi-resource-group" {
   source = "github.com/AmviTFModules/amvi-resource-group"
-  
+
   azure_resource_groups = {
     dev = {
       name     = "amvi-dev-VM-rg"
@@ -32,18 +31,20 @@ module "amvi-resource-group" {
         env = "dev"
       }
     }
-}
-  
+  }
 }
 
 # Getting the virtual network from the module
 
 module "terraform-azurerm-amvi-vmlinux" {
-  source = "github.com/AmviTFModules/terraform-azure-linux-vm"
-  resource_group_name = module.amvi-resource-group.azure_resource_groups["dev"].name
-  vm_name             = "amvi-LinuxVM-dev"
-  location            = "East US"
-  vm_size             = "Standard_DS2_v2"
-  admin_username      = "adminuser"
-  admin_password      = "SuperSecretPassword123!"
+    depends_on = [ module.amvi-resource-group ]
+  source               = "github.com/AmviTFModules/terraform-azurerm-amvi-vmlinux.git?ref=v1.0.3"
+  #resource_group_name  = module.amvi-resource-group.azure_resource_groups["dev"].name
+  resource_group_name  = "amvi-dev-VM-rg"
+  vm_names             = ["amvi-LinuxVM-dev"]
+  environment          = "dev"
+  virtual_network_name = "amvi-dev-vnet"
+  subnet_name          = "amvi-dev-subnet"
+  location             = "East US"
+  username             = "adminuser"
 }
